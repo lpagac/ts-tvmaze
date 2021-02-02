@@ -1,13 +1,13 @@
-import axios from "axios"
+import axios, { AxiosPromise, AxiosResponse } from "axios"
 import * as $ from 'jquery';
 
 const BASE_TV_API_URL = "http://api.tvmaze.com";
 
 const DEFAULT_IMAGE_URL = "http://joelburton.com/joel-burton.jpg";
 
-const $showsList = $("#showsList");
-const $episodesArea = $("#episodesArea");
-const $searchForm = $("#searchForm");
+const $showsList:JQuery<HTMLElement> = $("#showsList");
+const $episodesArea:JQuery<HTMLElement> = $("#episodesArea");
+const $searchForm:JQuery<HTMLElement> = $("#searchForm");
 
 type Show = {
   id: number,
@@ -15,8 +15,10 @@ type Show = {
   summary: string,
   image?: string
 }
-
-
+//breakdown the API request and provide more information
+interface APIResponse<T=any> {
+  data: T
+}
 
 /** Given a search term, search for tv shows that match that query.
  *
@@ -27,13 +29,14 @@ type Show = {
 
 async function getShowsByTerm(term: string): Promise<Show[]> {
   // ADD: Remove placeholder & make request to TVMaze search shows API.
-  let showsResult: any[] = await axios.get(`${BASE_TV_API_URL}/search/shows?q=${term}`);
+
+  let showsResult: APIResponse = await axios.get(`${BASE_TV_API_URL}/search/shows?q=${term}`);
   return showsResult.data.map(s => {
     return {
       id: s.show.id,
       name: s.show.name,
       summary: s.show.summary,
-      image: s.show.image.medium,
+      image: s.show.image && s.show.image.medium,
     }
   }); 
 }
@@ -41,7 +44,7 @@ async function getShowsByTerm(term: string): Promise<Show[]> {
 
 /** Given list of shows, create markup for each and to DOM */
 
-function populateShows(shows) {
+function populateShows(shows: Show[]):void {
   $showsList.empty();
 
   for (let show of shows) {
@@ -66,23 +69,24 @@ function populateShows(shows) {
     $showsList.append($show);  }
 }
 
-
 /** Handle search form submission: get shows from API and display.
  *    Hide episodes area (that only gets shown if they ask for episodes)
  */
 
-async function searchForShowAndDisplay() {
-  const term = $("#searchForm-term").val();
-  const shows = await getShowsByTerm(term);
+async function searchForShowAndDisplay(): Promise<void> {
+
+  const term = $("#searchForm-term").val() as string;
+  const shows:Show[] = await getShowsByTerm(term);
 
   $episodesArea.hide();
   populateShows(shows);
 }
 
-$searchForm.on("submit", async function (evt) {
+$searchForm.on("submit", async function (evt: Event){
   evt.preventDefault();
   await searchForShowAndDisplay();
 });
+
 
 
 /** Given a show ID, get from API and return (promise) array of episodes:
@@ -94,3 +98,4 @@ $searchForm.on("submit", async function (evt) {
 /** Write a clear docstring for this function... */
 
 // function populateEpisodes(episodes) { }
+

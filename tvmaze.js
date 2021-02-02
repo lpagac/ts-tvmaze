@@ -12787,7 +12787,7 @@ function getShowsByTerm(term) {
                                 id: s.show.id,
                                 name: s.show.name,
                                 summary: s.show.summary,
-                                image: s.show.image.medium,
+                                image: s.show.image && s.show.image.medium,
                             };
                         })];
             }
